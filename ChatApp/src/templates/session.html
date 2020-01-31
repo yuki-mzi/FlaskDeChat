@@ -1,0 +1,83 @@
+  <!DOCTYPE html>
+  <html lang="ja">
+  <head>
+    <script language=”javascript”>
+    resizeTo(600,500);
+    </script>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/static/style2.css">
+    <title>チャット</title>
+  </head>
+  <body>
+
+
+    <form align = "center"  action="" method="POST">
+      <input type="text" class="username" placeholder="ユーザー名"/><br>
+
+       <div id="chat-frame" class = message_holder>
+         <div id="targ" class="box_srcollbar">
+          <p  class="chat-talk">
+          </p>
+         </div>
+       </div><br>
+
+      <div class="radioArea" id="makeImg">
+        <input type="radio" name="wadai" id="r1" value = 0 checked><label for="r1">話題を続けても良い</label>
+        <input type="radio" name="wadai" id="r2" value = 1><label for="r2">話題を変えて欲しい</label>
+      </div><br>
+      <input type="text" class="message" placeholder="メッセージ"/>
+      <input id = "okuru" type="submit" class ="send"/>
+    </form>
+
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js" charset="UTF-8"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"charset="UTF-8"></script>
+    <script type="text/javascript" charset="UTF-8">
+      var socket = io.connect('http://' + document.domain + ':' + location.port);
+      socket.on( 'connect', function() {
+
+        socket.emit( 'my event', {
+          data: 'User Connected'
+        } )
+
+        var form = $( 'form' ).on( 'submit', function( e ) {
+          e.preventDefault()
+          let user_name = escape($('input.username').val())
+          let user_input = escape($('input.message').val())
+          let wadai_continue = $("input[name='wadai']:checked").val()
+          let now = new Date(Date.now());
+          let formatted = now.getHours() + ":" + now.getMinutes() + ":" + now.getSeconds();
+          socket.emit( 'my event', {
+            now_time : formatted,
+            user_name : user_name,
+            message : user_input,
+            wadai : wadai_continue,
+          } )
+
+          $( 'input.message' ).val( '' ).focus()
+          $("input[name='wadai']").attr("checked",true);　//false
+        } )
+      } )
+
+      socket.on( 'my response', function( msg ) {
+        console.log( msg )
+        let user_name =  $('input.username').val()
+        if( typeof msg.user_name !== 'undefined' && unescape(msg.user_name) === user_name) {
+            $('p.chat-talk').append('<span class="talk-content" >' + unescape(msg.message) + '</span>')
+        }
+        if( typeof msg.user_name !== 'undefined' && unescape(msg.user_name) !== user_name) {
+            $('p.chat-talk').append('<span class="talk-you-content" >' + unescape(msg.message) + '</span>')
+        }
+      })
+
+      $( 'form' ).on( 'submit', function() {
+          // 一番下までスクロールする
+          $('#targ').animate({scrollTop: $('#targ')[0].scrollHeight}, 'fast');
+      });
+
+
+    </script>
+
+  </body>
+  </html>
